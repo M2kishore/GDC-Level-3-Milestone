@@ -77,27 +77,92 @@ $ python tasks.py runserver # Starts the tasks management server"""
         )
 
     def add(self, args):
-        pass  # Use your existing implementation
+        priority = args[0]
+        taskString = args[1]
+        # check duplication
+        if priority in self.current_items.keys():
+            new_priority = str(int(priority) + 1)
+            temp = self.current_items[priority]
+            self.current_items[priority] = taskString
+            self.current_items[new_priority] = temp
+            pass
+        self.current_items[priority] = taskString
+        self.write_current()
+        print('Added task: "' + taskString + '" with priority ' + priority)
 
     def done(self, args):
-        pass  # Use your existing implementation
+        priority = args[0]
+        # check task existance
+        if priority in self.current_items:
+            # check if already completed by checking completed list
+            if self.current_items[priority] not in self.completed_items:
+                self.completed_items.append(self.current_items[priority])
+                self.current_items.pop(priority)
+                self.write_completed()
+                self.write_current()
+                print("Marked item as done.")
+            else:
+                pass
+        else:
+            print("Error: no incomplete item with priority " + priority + " exists.")
 
     def delete(self, args):
-        pass  # Use your existing implementation
+        priority = args[0]
+        # check task existence in completed_items
+        found = False
+        for completed_item in self.completed_items:
+            if priority in completed_item:
+                found = True
+                self.completed_items.remove(completed_item)
+                self.write_completed()
+        if priority in self.current_items.keys():
+            found = True
+            self.current_items.pop(priority)
+            self.write_current()
+
+        if found:
+            print("Deleted item with priority " + priority)
+        else:
+            print(
+                "Error: item with priority "
+                + priority
+                + " does not exist. Nothing deleted."
+            )
 
     def ls(self):
-        pass  # Use your existing implementation
+        for index, (priority, taskString) in enumerate(self.current_items.items()):
+            index+=1
+            print(str(index) + ". " + taskString + " [" + str(priority) + "]")
 
     def report(self):
-        pass  # Use your existing implementation
+        COMPLETED_TASKS_COUNT = len(self.completed_items)
+        PENDING_TASKS_COUNT = len(self.current_items)
+        # print pending
+        print("Pending : " + str(PENDING_TASKS_COUNT))
+        for index, (priority, taskString) in enumerate(self.current_items.items()):
+            print(str(index + 1) + ". " + taskString + " [" + str(priority) + "]")
+        # print completed
+        print()
+        print("Completed : " + str(COMPLETED_TASKS_COUNT))
+        for i, completed_item in enumerate(self.completed_items):
+            print(str(i + 1) + ". " + completed_item)
 
     def render_pending_tasks(self):
         # Complete this method to return all incomplete tasks as HTML
-        return "<h1> Show Incomplete Tasks Here </h1>"
+        content = "<ul>"
+        for index, (priority, taskString) in enumerate(self.current_items.items()):
+            index += 1
+            content += "<li>"+str(index)+". "+ taskString + " [" + str(priority) + "]"+"</li>"
+        return content + "</ul>"
 
     def render_completed_tasks(self):
+        self.read_completed()
         # Complete this method to return all completed tasks as HTML
-        return "<h1> Show Completed Tasks Here </h1>"
+        content = "<ul>"
+        for i, completed_item in enumerate(self.completed_items):
+            content += "<li>"+completed_item+"</li>"
+        return content+"</ul>"
+
 
 
 class TasksServer(TasksCommand, BaseHTTPRequestHandler):
