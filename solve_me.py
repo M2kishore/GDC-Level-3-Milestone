@@ -1,3 +1,4 @@
+from asyncio import tasks
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
@@ -80,12 +81,11 @@ $ python tasks.py runserver # Starts the tasks management server"""
         priority = args[0]
         taskString = args[1]
         # check duplication
-        if priority in self.current_items.keys():
-            new_priority = str(int(priority) + 1)
+        while priority in self.current_items.keys():
             temp = self.current_items[priority]
             self.current_items[priority] = taskString
-            self.current_items[new_priority] = temp
-            pass
+            priority = str(int(priority)+1)
+            taskString = temp
         self.current_items[priority] = taskString
         self.write_current()
         print('Added task: "' + taskString + '" with priority ' + priority)
